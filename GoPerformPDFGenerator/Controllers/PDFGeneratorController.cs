@@ -28,7 +28,7 @@ namespace GoPerformPDFGenerator.Controllers
         [HttpPost]
         public ActionResult Generate([FromBody] PDFGeneratorViewModel viewModel)
         {
-            PDFGenerator pdfGenerator = new PDFGenerator(_environment);
+            PDFGenerator pdfGenerator = new(_environment);
 
             return File(pdfGenerator.Generate(viewModel.Deliverables, viewModel.AssociateInfo), "application/pdf");
         }
