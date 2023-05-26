@@ -4,6 +4,6 @@ namespace GoPerformPDFGenerator.Services
 {
     public interface IPDFGenerator
     {
-        byte[] Generate(List<Deliverable> deliverables, AssociateInfo associateInfo);
+        byte[] Generate(List<Deliverable> deliverables, List<KeyRoleOutcome> keyRoleOutcomes, AssociateInfo associateInfo);
     }
 }

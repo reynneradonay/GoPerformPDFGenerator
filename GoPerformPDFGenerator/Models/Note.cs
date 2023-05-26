@@ -1,10 +1,10 @@
 ﻿namespace GoPerformPDFGenerator.Models
 {
-    public class DeliverableNote
+    public class Note
     {
-        public DeliverableNote()
+        public Note()
         {
-            Attachments = new List<DeliverableNoteAttachment>();
+            Attachments = new List<NoteAttachment>();
         }
 
         public string AssociateID { get; set; }
@@ -39,6 +39,6 @@
 
         public int RowStatus { get; set; }
 
-        public List<DeliverableNoteAttachment> Attachments { get; set; }
+        public List<NoteAttachment> Attachments { get; set; }
     }
 }

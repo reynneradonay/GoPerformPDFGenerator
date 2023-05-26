@@ -1,6 +1,6 @@
 ﻿namespace GoPerformPDFGenerator.Models
 {
-    public class DeliverableNoteAttachment
+    public class NoteAttachment
     {
         public int NoteID { get; set; }
 

@@ -3,6 +3,7 @@ using iText.IO.Image;
 using iText.Kernel.Colors;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas.Draw;
+using iText.Kernel.Geom;
 using iText.Layout;
 using iText.Layout.Borders;
 using iText.Layout.Element;
@@ -20,13 +21,13 @@ namespace GoPerformPDFGenerator.Services
             _environment = environment;
         }
 
-        public byte[] Generate(List<Deliverable> deliverables, AssociateInfo associateInfo)
+        public byte[] Generate(List<Deliverable> deliverables, List<KeyRoleOutcome> keyRoleOutcomes, AssociateInfo associateInfo)
         {
             byte[] pdfBytes;
             using (var stream = new MemoryStream())
             using (var wri = new PdfWriter(stream))
             using (var pdf = new PdfDocument(wri))
-            using (var doc = new Document(pdf, pageSize: iText.Kernel.Geom.PageSize.A4, false))
+            using (var doc = new Document(pdf, pageSize: PageSize.A4, false))
             {
                 Text headerText = new Text("GoPerform")
                     .SetFontColor(ColorConstants.WHITE)
@@ -44,6 +45,14 @@ namespace GoPerformPDFGenerator.Services
 
                 Text associateInfoManagerText = new Text($"Home Manager: {associateInfo.SupervisorName} ({associateInfo.SupervisorId})")
                     .SetFontColor(ColorConstants.BLACK);
+
+                Text keyRoleOutcomesText = new Text("Key Role Outcomes")
+                    .SetFontColor(ColorConstants.WHITE)
+                    .SetBold();
+
+                Text keyRoleOutcomesSubText = new Text("\n(Key outcomes expected from the role for the year, as defined by the Home manager)")
+                    .SetFontColor(ColorConstants.WHITE)
+                    .SetFontSize(8);
 
                 Text deliverablesText = new Text("Deliverables")
                     .SetFontColor(ColorConstants.WHITE)
@@ -95,7 +104,6 @@ namespace GoPerformPDFGenerator.Services
                    .SetTextAlignment(TextAlignment.LEFT)
                    .SetBorder(Border.NO_BORDER)
                    .Add(associateImage.SetAutoScale(true));
-
 
                 associateInfoTable.AddHeaderCell(associateInfoNameCell);
                 associateInfoTable.AddHeaderCell(associateInfoImageCell);

@@ -30,7 +30,7 @@ namespace GoPerformPDFGenerator.Controllers
         {
             PDFGenerator pdfGenerator = new(_environment);
 
-            return File(pdfGenerator.Generate(viewModel.Deliverables, viewModel.AssociateInfo), "application/pdf");
+            return File(pdfGenerator.Generate(viewModel.Deliverables, viewModel.KeyRoleOutcomes, viewModel.AssociateInfo), "application/pdf");
         }
     }
 }

@@ -4,7 +4,7 @@
     {
         public Deliverable()
         {
-            DeliverableNotes = new List<DeliverableNote>();
+            DeliverableNotes = new List<Note>();
         }
 
         public int DeliverableId { get; set; }
@@ -27,6 +27,6 @@
 
         public string ModifiedDetails { get; set; }
 
-        public List<DeliverableNote> DeliverableNotes { get; set; }
+        public List<Note> DeliverableNotes { get; set; }
     }
 }
