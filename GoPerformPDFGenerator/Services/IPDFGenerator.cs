@@ -1,4 +1,4 @@
-﻿using GoPerformPDFGenerator.Models;
+﻿using GoPerformPDFClassLibrary;
 
 namespace GoPerformPDFGenerator.Services
 {

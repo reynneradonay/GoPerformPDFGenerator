@@ -1,9 +1,9 @@
-﻿using GoPerformPDFGenerator.Models;
+﻿using GoPerformPDFClassLibrary;
 using iText.IO.Image;
 using iText.Kernel.Colors;
+using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas.Draw;
-using iText.Kernel.Geom;
 using iText.Layout;
 using iText.Layout.Borders;
 using iText.Layout.Element;
@@ -12,9 +12,9 @@ using System.Web;
 
 namespace GoPerformPDFGenerator.Services
 {
-    public class PDFGenerator : IPDFGenerator
+    public sealed class PDFGenerator : IPDFGenerator
     {
-        public static IWebHostEnvironment _environment;
+        public readonly IWebHostEnvironment _environment;
 
         public PDFGenerator(IWebHostEnvironment environment)
         {
@@ -122,6 +122,20 @@ namespace GoPerformPDFGenerator.Services
                     .SetTextAlignment(TextAlignment.CENTER)
                     .SetFontSize(10);
 
+                Paragraph keyRoleOutcomesParagraph = new Paragraph()
+                    .Add(keyRoleOutcomesText)
+                    .Add(keyRoleOutcomesSubText)
+                    .SetTextAlignment(TextAlignment.LEFT)
+                    .SetFontSize(12)
+                    .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                    .SetTextAlignment(TextAlignment.LEFT);
+
+                Div keyRoleOutcomesDiv = new Div()
+                    .SetPadding(10)
+                    .SetBackgroundColor(WebColors.GetRGBColor("#2E308E"));
+
+                keyRoleOutcomesDiv.Add(keyRoleOutcomesParagraph);
+
                 Paragraph deliverablesParagraph = new Paragraph()
                     .Add(deliverablesText)
                     .Add(deliverablesSubText)
@@ -144,15 +158,177 @@ namespace GoPerformPDFGenerator.Services
                 doc.Add(new Paragraph());
                 doc.Add(ls);
                 doc.Add(new Paragraph());
-                doc.Add(deliverablesDiv);
+                doc.Add(keyRoleOutcomesDiv);
                 doc.Add(new Paragraph());
 
-                Table deliverablesTable = new Table(1, false)
+                Table keyRoleOutcomesTable = new Table(1, false)
                     .SetWidth(UnitValue.CreatePercentValue(100))
                     .SetFontSize(10)
                     .SetHorizontalAlignment(HorizontalAlignment.LEFT)
                     .SetTextAlignment(TextAlignment.LEFT)
                     .SetMinWidth(UnitValue.CreatePercentValue(100));
+
+                foreach (var item in keyRoleOutcomes)
+                {
+                    Text keyRoleOutcomeTitleText = new Text(HttpUtility.HtmlDecode(item.Title))
+                        .SetFontColor(WebColors.GetRGBColor("#2E308E"))
+                        .SetBold();
+
+                    Text keyRoleOutcomeDescText = new Text(HttpUtility.HtmlDecode(ReplaceText(item.Description)))
+                        .SetFontColor(ColorConstants.BLACK);
+
+                    Cell keyRoleOutcomeTitleCell = new Cell()
+                       .SetBorder(Border.NO_BORDER)
+                       .Add(new Paragraph(keyRoleOutcomeTitleText))
+                       .SetTextAlignment(TextAlignment.LEFT)
+                       .SetPadding(5)
+                       .SetMargin(5)
+                       .SetBorderTop(new SolidBorder(WebColors.GetRGBColor("#2E308E"), 0.2f))
+                       .SetBorderLeft(new SolidBorder(WebColors.GetRGBColor("#2E308E"), 0.2f))
+                       .SetBorderRight(new SolidBorder(WebColors.GetRGBColor("#2E308E"), 0.2f));
+
+                    Cell keyRoleOutcomeDescCell = new Cell()
+                       .SetBorder(Border.NO_BORDER)
+                       .Add(new Paragraph(keyRoleOutcomeDescText).SetFontSize(10))
+                       .SetTextAlignment(TextAlignment.LEFT)
+                       .SetPadding(5)
+                       .SetMargin(5)
+                       .SetBorderLeft(new SolidBorder(WebColors.GetRGBColor("#2E308E"), 0.2f))
+                       .SetBorderRight(new SolidBorder(WebColors.GetRGBColor("#2E308E"), 0.2f));
+
+                    Cell blankCell = new Cell()
+                       .SetBorder(Border.NO_BORDER)
+                       .Add(new Paragraph("\n").SetFontSize(8))
+                       .SetTextAlignment(TextAlignment.LEFT)
+                       .SetPadding(5)
+                       .SetMargin(5);
+
+                    keyRoleOutcomesTable.AddCell(keyRoleOutcomeTitleCell);
+                    keyRoleOutcomesTable.AddCell(keyRoleOutcomeDescCell);
+
+                    // TODO: refactor this with the deliverable notes
+                    if (item.KeyRoleOutcomeNotes.Count > 0)
+                    {
+                        Table notesTable = new Table(new float[] { 1, 1, 1, 1, 1 })
+                           .SetWidth(UnitValue.CreatePercentValue(100))
+                           .SetFontSize(10)
+                           .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                           .SetTextAlignment(TextAlignment.CENTER)
+                           .SetMinWidth(UnitValue.CreatePercentValue(100))
+                           .SetBackgroundColor(WebColors.GetRGBColor("#E8E8E6"));
+
+                        keyRoleOutcomesTable.AddCell(notesTable);
+
+                        int totalNoteCount = item.KeyRoleOutcomeNotes.Count;
+                        int totalNoteAppreciationCount = item.KeyRoleOutcomeNotes.Where(i => i.NoteType == "Appreciation").Count();
+                        int totalNoteNeedImprovementCount = item.KeyRoleOutcomeNotes.Where(i => i.NoteType == "Need for Improvement").Count();
+                        int totalNoteSelfCount = item.KeyRoleOutcomeNotes.Where(i => i.NoteType == "Self").Count();
+                        int totalNoteOtherCount = item.KeyRoleOutcomeNotes.Where(i => i.NoteType == "Others").Count();
+
+                        Cell noteTotal = new Cell(1, 1)
+                            .SetBorder(Border.NO_BORDER)
+                            .Add(new Paragraph($"Total Notes: ({totalNoteCount})").SetFontSize(9))
+                            .SetTextAlignment(TextAlignment.LEFT)
+                            .SetPadding(3)
+                            .SetMargin(5)
+                            .SetBorderBottom(new DashedBorder(ColorConstants.BLACK, 0.2f))
+                            .SetWidth(UnitValue.CreatePercentValue(15));
+
+                        Cell noteAppreciationTotal = new Cell(1, 1)
+                            .SetBorder(Border.NO_BORDER)
+                            .Add(GetNoteImage(GetNoteTypeImagePathByStatus("Appreciation"), true, 12))
+                            .Add(new Paragraph(HttpUtility.HtmlDecode($"&nbsp;Appreciation: ({totalNoteAppreciationCount})")).SetFontSize(9))
+                            .SetTextAlignment(TextAlignment.LEFT)
+                            .SetPadding(3)
+                            .SetMargin(5)
+                            .SetBorderBottom(new DashedBorder(ColorConstants.BLACK, 0.2f))
+                            .SetWidth(UnitValue.CreatePercentValue(20));
+
+                        Cell noteNeedImprovementTotal = new Cell(1, 1)
+                            .SetBorder(Border.NO_BORDER)
+                            .Add(GetNoteImage(GetNoteTypeImagePathByStatus("Need for Improvement"), true, 12))
+                            .Add(new Paragraph(HttpUtility.HtmlDecode($"&nbsp;Need for Improvement: ({totalNoteNeedImprovementCount})")).SetFontSize(9))
+                            .SetTextAlignment(TextAlignment.LEFT)
+                            .SetPadding(3)
+                            .SetMargin(5)
+                            .SetBorderBottom(new DashedBorder(ColorConstants.BLACK, 0.2f))
+                            .SetWidth(UnitValue.CreatePercentValue(27));
+
+                        Cell noteSelfTotal = new Cell(1, 1)
+                            .SetBorder(Border.NO_BORDER)
+                            .Add(GetNoteImage(GetNoteTypeImagePathByStatus("Self"), true, 12))
+                            .Add(new Paragraph(HttpUtility.HtmlDecode($"&nbsp;Self Notes: ({totalNoteSelfCount})")).SetFontSize(9))
+                            .SetTextAlignment(TextAlignment.LEFT)
+                            .SetPadding(3)
+                            .SetMargin(5)
+                            .SetBorderBottom(new DashedBorder(ColorConstants.BLACK, 0.2f))
+                            .SetWidth(UnitValue.CreatePercentValue(19));
+
+                        Cell noteOtherTotal = new Cell(1, 1)
+                            .SetBorder(Border.NO_BORDER)
+                            .Add(GetNoteImage(GetNoteTypeImagePathByStatus("Others"), true, 12))
+                            .Add(new Paragraph(HttpUtility.HtmlDecode($"&nbsp;Others: ({totalNoteOtherCount})")).SetFontSize(9))
+                            .SetTextAlignment(TextAlignment.LEFT)
+                            .SetPadding(3)
+                            .SetMargin(5)
+                            .SetBorderBottom(new DashedBorder(ColorConstants.BLACK, 0.2f))
+                            .SetWidth(UnitValue.CreatePercentValue(19));
+
+                        notesTable.AddCell(noteTotal);
+                        notesTable.AddCell(noteAppreciationTotal);
+                        notesTable.AddCell(noteNeedImprovementTotal);
+                        notesTable.AddCell(noteSelfTotal);
+                        notesTable.AddCell(noteOtherTotal);
+
+                        var groupedNotes = item.KeyRoleOutcomeNotes.GroupBy(g => g.AssociateName)
+                            .Select(group => new { AssociateName = group.Key, Notes = group.ToList() })
+                            .ToList();
+
+                        foreach (var note in groupedNotes)
+                        {
+                            Cell noteItem = new Cell(1, 5)
+                               .SetBorder(Border.NO_BORDER)
+                               .Add(new Paragraph(note.AssociateName).SetFontSize(9))
+                               .SetTextAlignment(TextAlignment.LEFT)
+                               .SetPadding(3)
+                               .SetMargin(5)
+                               .SetUnderline();
+
+                            List noteList = new List();
+
+                            foreach (var noteObj in note.Notes)
+                            {
+                                //noteList.SetListSymbol("\u2022");
+                                ListItem listItem = new ListItem(HttpUtility.HtmlDecode($"\t&nbsp;{noteObj.NotesText}"))
+                                    .SetListSymbol(GetNoteImage(GetNoteTypeImagePathByStatus(noteObj.NoteType), false, 10));
+                                noteList.Add(listItem);
+                            }
+
+                            Cell noteItemList = new Cell(1, 5)
+                                .SetBorder(Border.NO_BORDER)
+                                .Add(noteList).SetFontSize(9)
+                                .SetTextAlignment(TextAlignment.LEFT)
+                                .SetVerticalAlignment(VerticalAlignment.MIDDLE)
+                                .SetPadding(10)
+                                .SetMarginLeft(10)
+                                .SetMarginRight(10);
+
+                            notesTable.AddCell(noteItem);
+                            notesTable.AddCell(noteItemList);
+                        }
+                    }
+
+                    keyRoleOutcomesTable.AddCell(blankCell);
+                }
+
+                doc.Add(keyRoleOutcomesTable);
+
+                Table deliverablesTable = new Table(1, false)
+                .SetWidth(UnitValue.CreatePercentValue(100))
+                .SetFontSize(10)
+                .SetHorizontalAlignment(HorizontalAlignment.LEFT)
+                .SetTextAlignment(TextAlignment.LEFT)
+                .SetMinWidth(UnitValue.CreatePercentValue(100));
 
                 Text measuredByText = new Text("Measured by: ")
                     .SetFontColor(ColorConstants.BLACK)
@@ -165,6 +341,10 @@ namespace GoPerformPDFGenerator.Services
                 Text statusText = new Text("Status: ")
                     .SetFontColor(ColorConstants.BLACK)
                     .SetBold();
+
+                doc.Add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+                doc.Add(deliverablesDiv);
+                doc.Add(new Paragraph());
 
                 foreach (var item in deliverables)
                 {
@@ -446,6 +626,11 @@ namespace GoPerformPDFGenerator.Services
             }
 
             return image;
+        }
+
+        private string ReplaceText(string text)
+        {
+            return text.Replace("&amp;bull;&amp;nbsp;", "").Replace("&lt;br&gt;", "\n").Replace("<br>", "\n");
         }
     }
 }

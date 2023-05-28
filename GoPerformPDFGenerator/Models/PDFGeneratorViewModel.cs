@@ -1,4 +1,6 @@
-﻿namespace GoPerformPDFGenerator.Models
+﻿using GoPerformPDFClassLibrary;
+
+namespace GoPerformPDFGenerator.Models
 {
     public class PDFGeneratorViewModel
     {
