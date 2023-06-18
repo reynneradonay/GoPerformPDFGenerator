@@ -630,7 +630,7 @@ namespace GoPerformPDFGenerator.Services
 
         private string ReplaceText(string text)
         {
-            return text.Replace("&amp;bull;&amp;nbsp;", "").Replace("&lt;br&gt;", "\n").Replace("<br>", "\n");
+            return text.Replace("&amp;bull;&amp;nbsp;", "\u2022 ").Replace("&lt;br&gt;", "\n").Replace("<br>", "\n");
         }
     }
 }

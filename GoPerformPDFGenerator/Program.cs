@@ -1,4 +1,5 @@
 using GoPerformPDFGenerator.Services;
+using Azure.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
