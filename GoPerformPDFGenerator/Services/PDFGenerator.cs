@@ -168,6 +168,9 @@ namespace GoPerformPDFGenerator.Services
                     .SetTextAlignment(TextAlignment.LEFT)
                     .SetMinWidth(UnitValue.CreatePercentValue(100));
 
+                ImageData img = ImageDataFactory.Create($"{_environment.WebRootPath}/images/attachment.png");
+                Image attachmentImage = new Image(img).ScaleAbsolute(7, 9);
+
                 foreach (var item in keyRoleOutcomes)
                 {
                     Text keyRoleOutcomeTitleText = new Text(HttpUtility.HtmlDecode(item.Title))
@@ -194,7 +197,8 @@ namespace GoPerformPDFGenerator.Services
                        .SetPadding(5)
                        .SetMargin(5)
                        .SetBorderLeft(new SolidBorder(WebColors.GetRGBColor("#2E308E"), 0.2f))
-                       .SetBorderRight(new SolidBorder(WebColors.GetRGBColor("#2E308E"), 0.2f));
+                       .SetBorderRight(new SolidBorder(WebColors.GetRGBColor("#2E308E"), 0.2f))
+                       .SetBorderBottom(new SolidBorder(WebColors.GetRGBColor("#2E308E"), 0.2f));
 
                     Cell blankCell = new Cell()
                        .SetBorder(Border.NO_BORDER)
@@ -295,13 +299,11 @@ namespace GoPerformPDFGenerator.Services
                                .SetUnderline();
 
                             List noteList = new List();
+                            Paragraph noteParagraph = new Paragraph();
 
                             foreach (var noteObj in note.Notes)
                             {
-                                //noteList.SetListSymbol("\u2022");
-                                ListItem listItem = new ListItem(HttpUtility.HtmlDecode($"\t&nbsp;{noteObj.NotesText}"))
-                                    .SetListSymbol(GetNoteImage(GetNoteTypeImagePathByStatus(noteObj.NoteType), false, 10));
-                                noteList.Add(listItem);
+                                noteList.Add(PopulateNoteAttachments(noteObj, noteParagraph, attachmentImage));
                             }
 
                             Cell noteItemList = new Cell(1, 5)
@@ -324,11 +326,11 @@ namespace GoPerformPDFGenerator.Services
                 doc.Add(keyRoleOutcomesTable);
 
                 Table deliverablesTable = new Table(1, false)
-                .SetWidth(UnitValue.CreatePercentValue(100))
-                .SetFontSize(10)
-                .SetHorizontalAlignment(HorizontalAlignment.LEFT)
-                .SetTextAlignment(TextAlignment.LEFT)
-                .SetMinWidth(UnitValue.CreatePercentValue(100));
+                    .SetWidth(UnitValue.CreatePercentValue(100))
+                    .SetFontSize(10)
+                    .SetHorizontalAlignment(HorizontalAlignment.LEFT)
+                    .SetTextAlignment(TextAlignment.LEFT)
+                    .SetMinWidth(UnitValue.CreatePercentValue(100));
 
                 Text measuredByText = new Text("Measured by: ")
                     .SetFontColor(ColorConstants.BLACK)
@@ -442,7 +444,7 @@ namespace GoPerformPDFGenerator.Services
                     deliverablesTable.AddCell(deliverableCompleteByCell);
                     deliverablesTable.AddCell(deliverableCreatedByCell);
 
-                    if (item.DeliverableNotes.Count > 0)
+                    if (item.DeliverableNotes.Any())
                     {
                         Table notesTable = new Table(new float[] { 1, 1, 1, 1, 1 })
                            .SetWidth(UnitValue.CreatePercentValue(100))
@@ -517,7 +519,7 @@ namespace GoPerformPDFGenerator.Services
 
                         var groupedNotes = item.DeliverableNotes.GroupBy(g => g.AssociateName)
                             .Select(group => new { AssociateName = group.Key, Notes = group.ToList() })
-                            .ToList();
+                            .ToList();                        
 
                         foreach (var note in groupedNotes)
                         {
@@ -530,13 +532,11 @@ namespace GoPerformPDFGenerator.Services
                                .SetUnderline();
 
                             List noteList = new List();
+                            Paragraph noteParagraph = new Paragraph();
 
                             foreach (var noteObj in note.Notes)
                             {
-                                //noteList.SetListSymbol("\u2022");
-                                ListItem listItem = new ListItem(HttpUtility.HtmlDecode($"\t&nbsp;{noteObj.NotesText}"))
-                                    .SetListSymbol(GetNoteImage(GetNoteTypeImagePathByStatus(noteObj.NoteType), false, 10));
-                                noteList.Add(listItem);
+                                noteList.Add(PopulateNoteAttachments(noteObj, noteParagraph, attachmentImage));
                             }
 
                             Cell noteItemList = new Cell(1, 5)
@@ -631,6 +631,32 @@ namespace GoPerformPDFGenerator.Services
         private string ReplaceText(string text)
         {
             return text.Replace("&amp;bull;&amp;nbsp;", "\u2022 ").Replace("&lt;br&gt;", "\n").Replace("<br>", "\n");
+        }
+
+        private ListItem PopulateNoteAttachments(Note noteObj, Paragraph noteParagraph, Image attachmentImage)
+        {
+            string noteText = HttpUtility.HtmlDecode($"\t&nbsp;{noteObj.NotesText}");
+
+            if (noteObj.Attachments.Any())
+            {
+                if (noteObj.Attachments.Count == 1)
+                {
+                    noteParagraph = new Paragraph();
+                }
+                foreach (var attachment in noteObj.Attachments)
+                {
+                    noteParagraph
+                        .Add(attachmentImage)
+                        .Add($" {attachment.ECMFileName}\t")
+                        .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                }
+            }
+
+            ListItem listItem = new ListItem(HttpUtility.HtmlDecode($"\t&nbsp;{noteObj.NotesText}"))
+                .SetListSymbol(GetNoteImage(GetNoteTypeImagePathByStatus(noteObj.NoteType), false, 10));
+            listItem.Add(noteParagraph);
+
+            return listItem;
         }
     }
 }
