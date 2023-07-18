@@ -9,7 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.0.0" />
     <PackageReference Include="Azure.Identity" Version="1.6.0" />
-    <PackageReference Include="GoPerformPDFClassLibrary" Version="2023.5.29.137" />
+    <PackageReference Include="GoPerformPDFClassLibrary" Version="2023.7.18.1941" />
     <PackageReference Include="itext7" Version="7.2.5" />
     <PackageReference Include="itext7.pdfhtml" Version="4.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.5" />

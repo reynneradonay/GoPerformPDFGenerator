@@ -519,7 +519,7 @@ namespace GoPerformPDFGenerator.Services
 
                         var groupedNotes = item.DeliverableNotes.GroupBy(g => g.AssociateName)
                             .Select(group => new { AssociateName = group.Key, Notes = group.ToList() })
-                            .ToList();                        
+                            .ToList();
 
                         foreach (var note in groupedNotes)
                         {
@@ -611,7 +611,7 @@ namespace GoPerformPDFGenerator.Services
                 "Need for Improvement" => $"{_environment.WebRootPath}/images/needimprovement.png",
                 "Self" => $"{_environment.WebRootPath}/images/self.png",
                 "Others" => $"{_environment.WebRootPath}/images/other.png",
-                _ => "",
+                _ => $"{_environment.WebRootPath}/images/other.png", //defaulted to Others if note is still requested
             };
         }
 
@@ -635,7 +635,7 @@ namespace GoPerformPDFGenerator.Services
 
         private ListItem PopulateNoteAttachments(Note noteObj, Paragraph noteParagraph, Image attachmentImage)
         {
-            string noteText = HttpUtility.HtmlDecode($"\t&nbsp;{noteObj.NotesText}");
+            string notesText = HttpUtility.HtmlDecode($"\t&nbsp;{ GetNotesText(noteObj) }");
 
             if (noteObj.Attachments.Any())
             {
@@ -652,11 +652,28 @@ namespace GoPerformPDFGenerator.Services
                 }
             }
 
-            ListItem listItem = new ListItem(HttpUtility.HtmlDecode($"\t&nbsp;{noteObj.NotesText}"))
+            ListItem listItem = new ListItem(notesText)
                 .SetListSymbol(GetNoteImage(GetNoteTypeImagePathByStatus(noteObj.NoteType), false, 10));
             listItem.Add(noteParagraph);
 
             return listItem;
+        }
+
+        private string GetNotesText(Note noteObj)
+        {
+            string notesText = "";
+
+            if (!string.IsNullOrEmpty(noteObj.NotesText))
+            {
+                notesText = noteObj.NotesText;
+
+            }
+            else if (!string.IsNullOrEmpty(noteObj.RequestText))
+            {
+                notesText = $"Requested from {noteObj.RequestedFromName} [{noteObj.RequestedFrom}] {noteObj.RequestText}";
+            }
+
+            return notesText;
         }
     }
 }
